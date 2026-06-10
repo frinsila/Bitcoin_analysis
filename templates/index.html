@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Bitcoin Price</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h2>Live BTC/USDT Price (Binance)</h2>
+
+<canvas id="chart" width="800" height="400"></canvas>
+
+<script>
+const ctx = document.getElementById('chart').getContext('2d');
+
+let chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'BTC Price',
+            data: [],
+            borderColor: 'blue',
+            fill: false,
+            tension: 0.2
+        }]
+    }
+});
+
+async function fetchPrice() {
+    const res = await fetch("/price");
+    const data = await res.json();
+    const price = data.price;
+
+    const now = new Date().toLocaleTimeString();
+
+    chart.data.labels.push(now);
+    chart.data.datasets[0].data.push(price);
+
+    // keep only last 20 points
+    if (chart.data.labels.length > 20) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+    }
+
+    chart.update();
+}
+
+// update every 2 seconds
+setInterval(fetchPrice, 2000);
+fetchPrice();
+</script>
+
+</body>
+</html>
