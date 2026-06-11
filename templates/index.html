@@ -1,54 +1,133 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Live Bitcoin Price</title>
+    <title>Live Bitcoin Dashboard</title>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+            text-align:center;
+            margin:20px;
+            background:#f4f4f4;
+        }
+
+        .card{
+            background:white;
+            width:350px;
+            margin:auto;
+            padding:20px;
+            border-radius:10px;
+            box-shadow:0 0 10px rgba(0,0,0,0.1);
+        }
+
+        #price{
+            font-size:32px;
+            font-weight:bold;
+            color:#2c3e50;
+        }
+
+        #change{
+            font-size:18px;
+            margin-top:10px;
+        }
+
+        .chart-container{
+            width:90%;
+            max-width:900px;
+            margin:40px auto;
+            background:white;
+            padding:20px;
+            border-radius:10px;
+            box-shadow:0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
 <body>
 
-<h2>Live BTC/USDT Price (Binance)</h2>
+    <h1>₿ Live Bitcoin Dashboard</h1>
 
-<canvas id="chart" width="800" height="400"></canvas>
+    <div class="card">
+        <div id="price">$0</div>
+        <div id="change">Loading...</div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="btcChart"></canvas>
+    </div>
 
 <script>
-const ctx = document.getElementById('chart').getContext('2d');
+const ctx = document.getElementById('btcChart').getContext('2d');
 
-let chart = new Chart(ctx, {
+const btcChart = new Chart(ctx, {
     type: 'line',
     data: {
         labels: [],
         datasets: [{
-            label: 'BTC Price',
+            label: 'Bitcoin Price (USD)',
             data: [],
-            borderColor: 'blue',
-            fill: false,
-            tension: 0.2
+            borderWidth: 2,
+            tension: 0.3
         }]
+    },
+    options: {
+        responsive: true,
+        animation: false,
+        scales: {
+            y: {
+                beginAtZero: false
+            }
+        }
     }
 });
 
-async function fetchPrice() {
-    const res = await fetch("/price");
-    const data = await res.json();
-    const price = data.price;
+async function getPrice() {
+    try {
+        const response = await fetch('/price');
+        const data = await response.json();
 
-    const now = new Date().toLocaleTimeString();
+        if(data.error){
+            console.log(data.error);
+            return;
+        }
 
-    chart.data.labels.push(now);
-    chart.data.datasets[0].data.push(price);
+        document.getElementById("price").innerHTML =
+            "$" + Number(data.price).toLocaleString();
 
-    // keep only last 20 points
-    if (chart.data.labels.length > 20) {
-        chart.data.labels.shift();
-        chart.data.datasets[0].data.shift();
+        let changeElement = document.getElementById("change");
+
+        if(data.change_24h >= 0){
+            changeElement.innerHTML =
+                "24h Change: +" + data.change_24h + "%";
+            changeElement.style.color = "green";
+        }
+        else{
+            changeElement.innerHTML =
+                "24h Change: " + data.change_24h + "%";
+            changeElement.style.color = "red";
+        }
+
+        const currentTime = new Date().toLocaleTimeString();
+
+        btcChart.data.labels.push(currentTime);
+        btcChart.data.datasets[0].data.push(data.price);
+
+        if (btcChart.data.labels.length > 30) {
+            btcChart.data.labels.shift();
+            btcChart.data.datasets[0].data.shift();
+        }
+
+        btcChart.update();
+
+    } catch(err){
+        console.log(err);
     }
-
-    chart.update();
 }
 
-// update every 2 seconds
-setInterval(fetchPrice, 2000);
-fetchPrice();
+getPrice();
+
+setInterval(getPrice, 5000);
 </script>
 
 </body>

@@ -1,10 +1,13 @@
 from flask import Flask, render_template, jsonify
 import requests
-import os
 
 app = Flask(__name__)
 
-BINANCE_URL = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
+COINGECKO_URL = (
+    "https://api.coingecko.com/api/v3/simple/price"
+    "?ids=bitcoin&vs_currencies=usd"
+    "&include_24hr_change=true"
+)
 
 @app.route("/")
 def home():
@@ -13,24 +16,20 @@ def home():
 @app.route("/price")
 def price():
     try:
-        response = requests.get(
-            "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
-            timeout=10
-        )
-
-        print("Status:", response.status_code)
-        print("Response:", response.text)
+        response = requests.get(COINGECKO_URL, timeout=10)
+        response.raise_for_status()
 
         data = response.json()
 
         return jsonify({
-            "price": float(data.get("price", 0))
+            "price": data["bitcoin"]["usd"],
+            "change_24h": round(data["bitcoin"]["usd_24h_change"], 2)
         })
 
     except Exception as e:
-        print("ERROR:", str(e))
-        return jsonify({"error": str(e)}), 500
-    
+        return jsonify({
+            "error": str(e)
+        }), 500
+
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run()
