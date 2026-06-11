@@ -1,134 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Live Bitcoin Dashboard</title>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Bitcoin Dashboard</title>
 
     <style>
-        body{
-            font-family: Arial, sans-serif;
-            text-align:center;
-            margin:20px;
-            background:#f4f4f4;
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: #111;
+            color: white;
         }
 
-        .card{
-            background:white;
-            width:350px;
-            margin:auto;
-            padding:20px;
-            border-radius:10px;
-            box-shadow:0 0 10px rgba(0,0,0,0.1);
+        .card {
+            margin: 50px auto;
+            width: 300px;
+            padding: 20px;
+            background: #222;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
         }
 
-        #price{
-            font-size:32px;
-            font-weight:bold;
-            color:#2c3e50;
+        .price {
+            font-size: 40px;
+            color: #f7931a;
+            margin-top: 10px;
         }
 
-        #change{
-            font-size:18px;
-            margin-top:10px;
-        }
-
-        .chart-container{
-            width:90%;
-            max-width:900px;
-            margin:40px auto;
-            background:white;
-            padding:20px;
-            border-radius:10px;
-            box-shadow:0 0 10px rgba(0,0,0,0.1);
+        .note {
+            margin-top: 20px;
+            font-size: 14px;
+            color: gray;
         }
     </style>
 </head>
+
 <body>
 
-    <h1>₿ Live Bitcoin Dashboard</h1>
+<h1>₿ Bitcoin Dashboard</h1>
 
-    <div class="card">
-        <div id="price">$0</div>
-        <div id="change">Loading...</div>
+<div class="card">
+    <h2>BTC / USD</h2>
+
+    <!-- Static display only -->
+    <div class="price">$ 0.00</div>
+
+    <div class="note">
+        Static demo (no API / no backend data)
     </div>
-
-    <div class="chart-container">
-        <canvas id="btcChart"></canvas>
-    </div>
-
-<script>
-const ctx = document.getElementById('btcChart').getContext('2d');
-
-const btcChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: [],
-        datasets: [{
-            label: 'Bitcoin Price (USD)',
-            data: [],
-            borderWidth: 2,
-            tension: 0.3
-        }]
-    },
-    options: {
-        responsive: true,
-        animation: false,
-        scales: {
-            y: {
-                beginAtZero: false
-            }
-        }
-    }
-});
-
-async function getPrice() {
-    try {
-        const response = await fetch('/price');
-        const data = await response.json();
-
-        if(data.error){
-            console.log(data.error);
-            return;
-        }
-
-        document.getElementById("price").innerHTML =
-            "$" + Number(data.price).toLocaleString();
-
-        let changeElement = document.getElementById("change");
-
-        if(data.change_24h >= 0){
-            changeElement.innerHTML =
-                "24h Change: +" + data.change_24h + "%";
-            changeElement.style.color = "green";
-        }
-        else{
-            changeElement.innerHTML =
-                "24h Change: " + data.change_24h + "%";
-            changeElement.style.color = "red";
-        }
-
-        const currentTime = new Date().toLocaleTimeString();
-
-        btcChart.data.labels.push(currentTime);
-        btcChart.data.datasets[0].data.push(data.price);
-
-        if (btcChart.data.labels.length > 30) {
-            btcChart.data.labels.shift();
-            btcChart.data.datasets[0].data.shift();
-        }
-
-        btcChart.update();
-
-    } catch(err){
-        console.log(err);
-    }
-}
-
-getPrice();
-
-setInterval(getPrice, 5000);
-</script>
+</div>
 
 </body>
 </html>
